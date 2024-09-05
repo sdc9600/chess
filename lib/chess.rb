@@ -1,7 +1,10 @@
+require 'pry-byebug'
+
 class Chess
   attr_reader :gameboard
   def initialize
     @gameboard = Array.new(8) {Array.new(8, "  ")}
+    @turn = "White"
   end
 
   def starting_posiiton
@@ -22,10 +25,25 @@ class Chess
   end
 
   def validate_move(move)
-    # Build a converter here that takes a user given string and converts it into numbers that can be directly plugged back 
-    #into checking values in gameboard
+    x = 0
+    move = move.chars
+    move.each do |square|
+     # binding.pry
+      move[x] = (square.ord - 98) if square.to_i == 0
+      move[x] = move[x].to_i - 1 if square.to_i != 0
+      x+= 1
+    end 
     starting_square = move[0..1]
     destination_square = move[2..3]
+    piece_type = @gameboard[starting_square[1]][starting_square[0]]
+    p piece_type
+    p starting_square
+    p destination_square
+  end
+
+  def legal_moves_array(starting_square, piece_type)
+    if piece_type == "wP"
+      legal_moves_array = 
   end
 end
 
