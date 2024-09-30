@@ -42,22 +42,58 @@ class Chess
     legal_moves_check(starting_square, destination_square, piece_type)
   end
 
-  def legal_moves_check(starting_square, destination_square, piece_type)
-    inbetween_squares_array = []
-    x = 1
-    return false if starting_square == destination_square # The piece needs to actually move, passing is not valid
-    return false if destination_square.any? {|element| element > 7 || element < 0} #Out of bounds check, a piece can't leave the gameboard
-    if starting_square[0] < destination_square[0] && starting_square[1] == destination_square[1]
+  def generate_inbetween_squares_array(starting_square, destination_square)
+    if starting_square[0] < destination_square[0] && starting_square[1] == destination_square[1] #Appending to an array all inbetween squares
       until starting_square[0] + x == destination_square[0] do
         inbetween_squares_array.append([starting_square[0] + x, starting_square[1]])
         x += 1
       end
     elsif starting_square[0] > destination_square[0] && starting_square[1] == destination_square[1]
-      until starting_square[0] + x == destination_square[0] do
+      until starting_square[0] - x == destination_square[0] do
         inbetween_squares_array.append([starting_square[0] - x, starting_square[1]])
         x += 1
       end
-    end  # A check if there is any piece being passed over on the trip to the destination square (Ignored for knights and kings)
+    elsif starting_square[0] == destination_square[0] && starting_square[1] < destination_square[1]
+      until starting_square[1] + x == destination_square[1] do
+        inbetween_squares_array.append([starting_square[0], starting_square[1] + x])
+        x += 1
+      end
+    elsif starting_square[0] == destination_square[0] && starting_square[1] > destination_square[1]
+      until starting_square[1] - x == destination_square[1] do
+        inbetween_squares_array.append([starting_square[0], starting_square[1] - x])
+        x += 1
+      end
+    elsif starting_square[0] > destination_square[0] && starting_square[1] > destination_square[1]
+      until starting_square[0] + x == destination_square[0] do
+        inbetween_squares_array.append([starting_square[0] + x, starting_square[1] + x])
+        x += 1
+      end
+    elsif starting_square[0] > destination_square[0] && starting_square[1] < destination_square[1]
+      until starting_square[0] + x == destination_square[0] do
+        inbetween_squares_array.append([starting_square[0] + x, starting_square[1] - x])
+        x += 1
+      end
+    elsif starting_square[0] < destination_square[0] && starting_square[1] > destination_square[1]
+      until starting_square[0] - x == destination_square[1] do
+        inbetween_squares_array.append([starting_square[0] - x, starting_square[1] + x])
+        x += 1
+      end
+    elsif starting_square[0] > destination_square[0] && starting_square[1] > destination_square[1]
+      until starting_square[1] - x == destination_square[1] do
+        inbetween_squares_array.append([starting_square[0] + x, starting_square[1] + x])
+        x += 1
+      end
+    end
+    inbetween_squares_array
+  end
+
+  def legal_moves_check(starting_square, destination_square, piece_type)
+    return false if starting_square[0] != destination_square[0] && starting_square[1] != destination_square[1] && (destination_square[1] - destination_square[0]) != (starting_square[1] - starting_square[0]) && piece_type != "wN" || piece_type != "bN" #Piece movement is not valid (except for knights)
+    return false if starting_square == destination_square # The piece needs to actually move, passing is not valid
+    return false if destination_square.any? {|element| element > 7 || element < 0} #Out of bounds check, a piece can't leave the gameboard
+    inbetween_squares_array = generate_inbetween_squares_array(starting_square, destination_square)
+     
+    return false if inbetween_squares_array.any? {|square| square != " "} # A check if there is any piece being passed over on the trip to the destination square (Ignored for knights and kings)
     if piece_type == "wP"
     end
     p inbetween_squares_array
@@ -66,4 +102,4 @@ end
 
 game = Chess.new
 game.starting_posiiton
-game.validate_move("e2a2")
+game.validate_move("e2e4")
