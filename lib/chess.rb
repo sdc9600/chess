@@ -1,7 +1,7 @@
 require 'pry-byebug'
 
 class Chess
-  attr_reader :gameboard
+  attr_reader :gameboard, :turn
   def initialize
     @gameboard = Array.new(8) {Array.new(8, "  ")}
     @turn = "White"
@@ -36,10 +36,12 @@ class Chess
     starting_square = move[0..1]
     destination_square = move[2..3]
     piece_type = @gameboard[starting_square[1]][starting_square[0]]
+    destination_piece_type = @gameboard[destination_square[1]][destination_square[0]]
     p piece_type
     p starting_square
     p destination_square
-    legal_moves_check(starting_square, destination_square, piece_type)
+    p destination_piece_type
+    legal_moves_check(starting_square, destination_square, piece_type, destination_piece_type)
   end
 
   def generate_inbetween_squares_array(starting_square, destination_square)
@@ -87,19 +89,19 @@ class Chess
     inbetween_squares_array
   end
 
-  def legal_moves_check(starting_square, destination_square, piece_type)
+  def legal_moves_check(starting_square, destination_square, piece_type, destination_piece_type)
+    return false if piece_type == " " # Player needs to start on a square with their piece
+    return false if piece_type.include?("w") && turn != "White" || piece_type.include?("b") && turn != "Black" # Player must move piece of their colour
+    return false if piece_type.include?("w") && destination_piece_type.include?("w") || piece_type.include?("b") && destination_piece_type.include?("b") # A piece cannot capture a piece of the same colour
     return false if starting_square[0] != destination_square[0] && starting_square[1] != destination_square[1] && (destination_square[1] - destination_square[0]) != (starting_square[1] - starting_square[0]) && piece_type != "wN" || piece_type != "bN" #Piece movement is not valid (except for knights)
     return false if starting_square == destination_square # The piece needs to actually move, passing is not valid
     return false if destination_square.any? {|element| element > 7 || element < 0} #Out of bounds check, a piece can't leave the gameboard
     inbetween_squares_array = generate_inbetween_squares_array(starting_square, destination_square)
-     
     return false if inbetween_squares_array.any? {|square| square != " "} # A check if there is any piece being passed over on the trip to the destination square (Ignored for knights and kings)
-    if piece_type == "wP"
-    end
     p inbetween_squares_array
   end
 end
 
 game = Chess.new
 game.starting_posiiton
-game.validate_move("e2e4")
+game.validate_move("e2e8")
