@@ -96,9 +96,17 @@ class Chess
     return false if starting_square[0] != destination_square[0] && starting_square[1] != destination_square[1] && (destination_square[1] - destination_square[0]) != (starting_square[1] - starting_square[0]) && piece_type != "wN" || piece_type != "bN" #Piece movement is not valid (except for knights)
     return false if starting_square == destination_square # The piece needs to actually move, passing is not valid
     return false if destination_square.any? {|element| element > 7 || element < 0} #Out of bounds check, a piece can't leave the gameboard
+    return false if (piece_type == 'wR' || piece_type == 'bR') && starting_square[0] != destination_square[0] && starting_square[1] != destination_square[1] #Rooks can't move diagonally
+    return false if (piece_type == 'wB' || piece_type == 'bB') && starting_square[0] + starting_square[1] != destination_square[0] + destination_square[1] # Bishops can only move diagonally
+    return false if (piece_type == 'wN'||| piece_type == 'bN') && ((starting_square[0] + destination_square[0]) * 2) + ((starting_square[1] + destination_square[1]) * 2) != 5 # This should hold true for all legal knight moves
     inbetween_squares_array = generate_inbetween_squares_array(starting_square, destination_square)
-    return false if inbetween_squares_array.any? {|square| square != " "} # A check if there is any piece being passed over on the trip to the destination square (Ignored for knights and kings)
-    p inbetween_squares_array
+    return false if inbetween_squares_array.any? {|square| square != "  "} # A check if there is any piece being passed over on the trip to the destination square (Ignored for knights and kings) 
+  end
+
+  def resolve_legal_move(starting_square, destination_square, piece_type)
+    gameboard[starting_square[0]][starting_square[1]] == "  "
+    gameboard[destination_square[0]][destination_square[1]] == piece_type
+    @turn == "White" ? @turn = "Black" : @turn = "White"
   end
 end
 
