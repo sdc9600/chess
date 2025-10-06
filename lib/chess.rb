@@ -16,7 +16,6 @@ class Chess
   end
 
   def display_gameboard
-    #print "#{@gameboard[-1]}\n#{@gameboard[-2]}\n#{@gameboard[-3]}\n#{@gameboard[-4]}\n#{@gameboard[-5]}\n#{@gameboard[-6]}\n#{@gameboard[-7]}\n#{@gameboard[-8]}\n"
     i = 0
     j = 7
     until j == -1 do
@@ -50,19 +49,53 @@ class Chess
     return false if @gameboard[starting_square[0]][starting_square[1]].include?('w') && turn == 'Black'
     return false if @gameboard[destination_square[0]][destination_square[1]].include?('b') && turn == 'Black'
     return false if @gameboard[destination_square[0]][destination_square[1]].include?('w') && turn == 'White'
-    validate_pawn_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]] == 'wP' || @gameboard[starting_square[0]][starting_square[1]] == 'bP'
-    @gameboard[destination_square[0]][destination_square[1]] = @gameboard[starting_square[0]][starting_square[1]]
-    @gameboard[starting_square[0]][starting_square[1]] = '  '
-    display_gameboard
+    validate_pawn_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("P")
+    validate_knight_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("N")
+    validate_bishop_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("B")
+    validate_rook_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("R")
+    validate_queen_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("Q")
+    validate_king_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("K")
+    update_gamestate(starting_square, destination_square)
   end
 
   def validate_pawn_move(starting_square, destination_square)
     return false if destination_square[1] - starting_square[1] >= 2 && turn == 'White' || destination_square[1] - starting_square[1] <= 2 && turn == 'Black' # Pawn cannot move more then 2 squares forward in a move
     return false if (destination_square[1] - starting_square[1] == 2 && turn == 'White' && starting_square[1] != 1) || (destination_square[1] - starting_square[1] == -2 && turn == 'Black' && starting_square[1] != 6)
-    
+    return false if (destination_square[0] - starting_square[0]) >= 2 || (destination_square[0] - starting_square[0]) <= -2
+    return false if (destination_square[0] - starting_square[0] == 1 && destination_square[1] - starting_square[1] != 1) || destination_square[0] - starting_square[0] == -1 && destination_square[1] - starting_square[1] != -1 
+
+  end
+
+  def validate_knight_move(starting_square, destination_square)
+  end
+
+  def validate_bishop_move(starting_square, destination_square)
+    return false if destination_square[0] - starting_square[0] != destination_square[1] - starting_square[1]
+  end
+
+  def validate_rook_move(starting_square, destination_square)
+    return false if destination_square[0]  - starting_square[0] != 0 && destination_square[1] - starting_square[1] != 0
+  end
+
+  def validate_queen_move(starting_square, destination_square)
+  end
+
+  def validate_king_move(starting_square, destination_square)
+  end
+
+  def update_gamestate(starting_square, destination_square)
+    @gameboard[destination_square[0]][destination_square[1]] = @gameboard[starting_square[0]][starting_square[1]]
+    @gameboard[starting_square[0]][starting_square[1]] = '  '
+    @turn == "White" ? @turn = "Black" : @turn = "White"
+  end
+
+  def game_loop
+    until 1 == 0 do #Infinite pending adding rules to check for checkmate / other end of game conditions
+    display_gameboard
+    make_move
+    end
   end
 end
 
 test_game = Chess.new
-test_game.display_gameboard
-test_game.make_move
+test_game.game_loop
