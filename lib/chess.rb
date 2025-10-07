@@ -49,24 +49,27 @@ class Chess
     return false if @gameboard[starting_square[0]][starting_square[1]].include?('w') && turn == 'Black'
     return false if @gameboard[destination_square[0]][destination_square[1]].include?('b') && turn == 'Black'
     return false if @gameboard[destination_square[0]][destination_square[1]].include?('w') && turn == 'White'
-    validate_pawn_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("P")
-    validate_knight_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("N")
-    validate_bishop_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("B")
-    validate_rook_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("R")
-    validate_queen_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("Q")
-    validate_king_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("K")
+    success = validate_pawn_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("P")
+    success = validate_knight_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("N")
+    success = validate_bishop_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("B")
+    success = validate_rook_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("R")
+    success = validate_queen_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("Q")
+    success = validate_king_move(starting_square, destination_square) if @gameboard[starting_square[0]][starting_square[1]].include?("K")
+    return false if success == false
     update_gamestate(starting_square, destination_square)
   end
 
   def validate_pawn_move(starting_square, destination_square)
-    return false if destination_square[1] - starting_square[1] >= 2 && turn == 'White' || destination_square[1] - starting_square[1] <= 2 && turn == 'Black' # Pawn cannot move more then 2 squares forward in a move
+    return false if destination_square[1] - starting_square[1] > 2 || destination_square[1] - starting_square[1] < -2 # Pawn cannot move more then 2 squares forward in a move
     return false if (destination_square[1] - starting_square[1] == 2 && turn == 'White' && starting_square[1] != 1) || (destination_square[1] - starting_square[1] == -2 && turn == 'Black' && starting_square[1] != 6)
-    return false if (destination_square[0] - starting_square[0]) >= 2 || (destination_square[0] - starting_square[0]) <= -2
-    return false if (destination_square[0] - starting_square[0] == 1 && destination_square[1] - starting_square[1] != 1) || destination_square[0] - starting_square[0] == -1 && destination_square[1] - starting_square[1] != -1 
-
+    return false if (destination_square[0] - starting_square[0]).abs != 1 || (destination_square[0] - starting_square[0]) != 0
+    return false if (destination_square[0] - starting_square[0]).abs == 1 && (destination_square[1] - starting_square[1]).abs != 1 #If the pawn moves horizontally 1 square it also moves vertically forward 1 square (capture)
+    return false if (destination_square[0] - starting_square[0]).abs == 1 && (destination_square[1] - starting_square[1]).abs == 1 && @gameboard[destination_square[0]][destination_square[1]] == '  ' # Cannot move diagonally without capturing (except for e.p.)
   end
 
   def validate_knight_move(starting_square, destination_square)
+    return false if (destination_square[0] - starting_square[0]).abs + (destination_square[1] - starting_square[1]).abs != 3
+    return false if (destination_square[0] - starting_square[0]).abs == 3 || (destination_square[1] - starting_square[1]).abs == 3
   end
 
   def validate_bishop_move(starting_square, destination_square)
@@ -78,9 +81,11 @@ class Chess
   end
 
   def validate_queen_move(starting_square, destination_square)
+    return false if starting_square[0] != destination_square[0] && starting_square[1] != destination_square[1] && (destination_square[0] - starting_square[0]).abs != (destination_square[1] - destination_square[0]).abs
   end
 
   def validate_king_move(starting_square, destination_square)
+    return false if (destination_square[0] - starting_square[0]).abs >= 2 || (destination_square[1] - starting_square[1]).abs >= 2
   end
 
   def update_gamestate(starting_square, destination_square)
