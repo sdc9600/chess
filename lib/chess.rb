@@ -1,9 +1,11 @@
 class Chess
 
-  attr_accessor :gameboard, :turn
+  attr_accessor :gameboard, :turn, :en_passant, :en_passant_coordinates
 
   def initialize
     @turn = 'White'
+    @en_passant = 0
+    @en_passant_coordinates = [0, 0]
     @gameboard = Array.new(8) {Array.new(8, '  ')}
     @gameboard[0] = ['wR', 'wP', '  ', '  ', '  ', '  ', 'bP', 'bR']
     @gameboard[1] = ['wN', 'wP', '  ', '  ', '  ', '  ', 'bP', 'bN']
@@ -36,7 +38,12 @@ class Chess
       move[1] = (move[1].to_i - 1).to_s
       move[2] = (move[2].ord - 97).to_s
       move[3] = (move[3].to_i - 1).to_s
+      p move
       move = move.to_i.digits.reverse
+      until move.length == 4 do
+        move.unshift(0)
+      end  #to_i will remove any leading zeroes if they exist, this adds them back to the array
+      p move
       validate_move(move[0..1], move[2..3])
     else
       make_move
@@ -62,9 +69,14 @@ class Chess
   def validate_pawn_move(starting_square, destination_square)
     return false if destination_square[1] - starting_square[1] > 2 || destination_square[1] - starting_square[1] < -2 # Pawn cannot move more then 2 squares forward in a move
     return false if (destination_square[1] - starting_square[1] == 2 && turn == 'White' && starting_square[1] != 1) || (destination_square[1] - starting_square[1] == -2 && turn == 'Black' && starting_square[1] != 6)
-    return false if (destination_square[0] - starting_square[0]).abs != 1 || (destination_square[0] - starting_square[0]) != 0
+    return false if (destination_square[0] - starting_square[0]).abs != 1 && (destination_square[0] - starting_square[0]) != 0
     return false if (destination_square[0] - starting_square[0]).abs == 1 && (destination_square[1] - starting_square[1]).abs != 1 #If the pawn moves horizontally 1 square it also moves vertically forward 1 square (capture)
     return false if (destination_square[0] - starting_square[0]).abs == 1 && (destination_square[1] - starting_square[1]).abs == 1 && @gameboard[destination_square[0]][destination_square[1]] == '  ' # Cannot move diagonally without capturing (except for e.p.)
+    return false if (destination_square[0] - starting_square[0]) == 0 && @gameboard[destination_square[0]][destination_square[1]] != '  ' #Pawn cannot capture vertically
+    if (destination_square[1] - starting_square[1]).abs == 2
+      @en_passant = 1
+      @en_passant_coordinates = [destination_square[0][destination_square[1] - 1]]
+    end
   end
 
   def validate_knight_move(starting_square, destination_square)
@@ -73,15 +85,16 @@ class Chess
   end
 
   def validate_bishop_move(starting_square, destination_square)
-    return false if destination_square[0] - starting_square[0] != destination_square[1] - starting_square[1]
+    return false if (destination_square[0] - starting_square[0]).abs != (destination_square[1] - starting_square[1]).abs
   end
-
+    p (starting_square[1] - starting_square[0]).abs 
+    p (destination_square[1] - destination_square[0]).abs
   def validate_rook_move(starting_square, destination_square)
     return false if destination_square[0]  - starting_square[0] != 0 && destination_square[1] - starting_square[1] != 0
   end
 
   def validate_queen_move(starting_square, destination_square)
-    return false if starting_square[0] != destination_square[0] && starting_square[1] != destination_square[1] && (destination_square[0] - starting_square[0]).abs != (destination_square[1] - destination_square[0]).abs
+    return false if starting_square[0] != destination_square[0] && starting_square[1] != destination_square[1] && (destination_square[0] - starting_square[0]).abs != (destination_square[1] - starting_square[1]).abs
   end
 
   def validate_king_move(starting_square, destination_square)
@@ -92,6 +105,11 @@ class Chess
     @gameboard[destination_square[0]][destination_square[1]] = @gameboard[starting_square[0]][starting_square[1]]
     @gameboard[starting_square[0]][starting_square[1]] = '  '
     @turn == "White" ? @turn = "Black" : @turn = "White"
+    if @en_passant == 1
+      @en_passant -= 1
+    else
+      @en_passant_coordinates = nil
+    end
   end
 
   def game_loop
