@@ -1,3 +1,5 @@
+require 'pry-byebug'
+
 class Chess
 
   attr_accessor :gameboard, :turn, :en_passant, :en_passant_coordinates
@@ -6,6 +8,8 @@ class Chess
     @turn = 'White'
     @en_passant = 0
     @en_passant_coordinates = [0, 0]
+    @white_castling = [1, 1]
+    @black_castling = [1, 1]
     @gameboard = Array.new(8) {Array.new(8, '  ')}
     @gameboard[0] = ['wR', 'wP', '  ', '  ', '  ', '  ', 'bP', 'bR']
     @gameboard[1] = ['wN', 'wP', '  ', '  ', '  ', '  ', 'bP', 'bN']
@@ -71,12 +75,21 @@ class Chess
     return false if (destination_square[1] - starting_square[1] == 2 && turn == 'White' && starting_square[1] != 1) || (destination_square[1] - starting_square[1] == -2 && turn == 'Black' && starting_square[1] != 6)
     return false if (destination_square[0] - starting_square[0]).abs != 1 && (destination_square[0] - starting_square[0]) != 0
     return false if (destination_square[0] - starting_square[0]).abs == 1 && (destination_square[1] - starting_square[1]).abs != 1 #If the pawn moves horizontally 1 square it also moves vertically forward 1 square (capture)
-    return false if (destination_square[0] - starting_square[0]).abs == 1 && (destination_square[1] - starting_square[1]).abs == 1 && @gameboard[destination_square[0]][destination_square[1]] == '  ' # Cannot move diagonally without capturing (except for e.p.)
+    return false if (destination_square[0] - starting_square[0]).abs == 1 && (destination_square[1] - starting_square[1]).abs == 1 && @gameboard[destination_square[0]][destination_square[1]] == '  ' && @en_passant_coordinates != [destination_square[0], destination_square[1]] # Cannot move diagonally without capturing (except for e.p.)
     return false if (destination_square[0] - starting_square[0]) == 0 && @gameboard[destination_square[0]][destination_square[1]] != '  ' #Pawn cannot capture vertically
+    p @gameboard[destination_square[0]][destination_square[1]]
+    en_passant(starting_square, destination_square) if @gameboard[destination_square[0]][destination_square[1]] == '  ' && starting_square[0] != destination_square[0]
     if (destination_square[1] - starting_square[1]).abs == 2
       @en_passant = 1
-      @en_passant_coordinates = [destination_square[0][destination_square[1] - 1]]
+      @en_passant_coordinates = [destination_square[0], destination_square[1] - 1] if @turn == 'White'
+      @en_passant_coordinates = [destination_square[0], destination_square[1] + 1] if @turn == 'Black'
     end
+  end
+
+  def en_passant(starting_square, destination_square)
+    # binding.pry
+    @gameboard[destination_square[0]][destination_square[1] - 1] = '  ' if @turn == "White"
+    @gameboard[destination_square[0]][destination_square[1] + 1] = '  ' if @turn == "Black"
   end
 
   def validate_knight_move(starting_square, destination_square)
@@ -87,9 +100,12 @@ class Chess
   def validate_bishop_move(starting_square, destination_square)
     return false if (destination_square[0] - starting_square[0]).abs != (destination_square[1] - starting_square[1]).abs
   end
-    p (starting_square[1] - starting_square[0]).abs 
-    p (destination_square[1] - destination_square[0]).abs
+
   def validate_rook_move(starting_square, destination_square)
+    white_castling[0] = 0 if starting_square = [0, 0] && @turn == "White"
+    white_castling[1] = 0 if starting_square = [7, 0] && @turn == "White"
+    black_castling[0] = 0 if starting_square = [0, 7] && @turn == "Black"
+    black_castling[1] = 0 if starting_square = [7, 7] && @turn == "Black"
     return false if destination_square[0]  - starting_square[0] != 0 && destination_square[1] - starting_square[1] != 0
   end
 
@@ -99,6 +115,8 @@ class Chess
 
   def validate_king_move(starting_square, destination_square)
     return false if (destination_square[0] - starting_square[0]).abs >= 2 || (destination_square[1] - starting_square[1]).abs >= 2
+    white_castling = [0, 0] if @turn == "White"
+    black_castling = [0, 0] if @turn == "Black"
   end
 
   def update_gamestate(starting_square, destination_square)
