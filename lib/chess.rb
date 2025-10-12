@@ -70,7 +70,33 @@ class Chess
     update_gamestate(starting_square, destination_square)
   end
 
+  def line_of_sight(starting_square, destination_square)
+    line_of_sight = []
+    j = 1
+    starting_square[0] <= destination_square[0] ? horizontal_vector = 1 : horizontal_vector = - 1
+    starting_square[1] <= destination_square[1] ? vertical_vector = 1 : vertical_vector = - 1
+    if starting_square[0] != destination_square[0] && starting_square[1] != destination_square[1]
+      until starting_square[0] + (j * horizontal_vector) == destination_square[0] do
+      line_of_sight.append(@gameboard[starting_square[0] + (j * horizontal_vector)][starting_square[1] + (j * vertical_vector)])
+      j += 1
+      end
+    elsif starting_square[0] != destination_square[0]
+      until starting_square[0] + (j * horizontal_vector) == destination_square[0] do
+        line_of_sight.append(@gameboard[starting_square[0] + (j * horizontal_vector)][starting_square[1]])
+        j += 1
+      end
+    else
+      until starting_square[1] + (j * vertical_vector) == destination_square[1] do
+        line_of_sight.append(@gameboard[starting_square[0]][starting_square[1]+ (j * vertical_vector)])
+        j += 1
+      end
+    end
+    p line_of_sight
+    return false if line_of_sight.any? {|element| element != "  "}
+  end
+
   def validate_pawn_move(starting_square, destination_square)
+    return false if line_of_sight(starting_square, destination_square) == false
     return false if destination_square[1] - starting_square[1] > 2 || destination_square[1] - starting_square[1] < -2 # Pawn cannot move more then 2 squares forward in a move
     return false if (destination_square[1] - starting_square[1] == 2 && turn == 'White' && starting_square[1] != 1) || (destination_square[1] - starting_square[1] == -2 && turn == 'Black' && starting_square[1] != 6)
     return false if (destination_square[0] - starting_square[0]).abs != 1 && (destination_square[0] - starting_square[0]) != 0
@@ -99,6 +125,7 @@ class Chess
 
   def validate_bishop_move(starting_square, destination_square)
     return false if (destination_square[0] - starting_square[0]).abs != (destination_square[1] - starting_square[1]).abs
+    return false if line_of_sight(starting_square, destination_square) == false
   end
 
   def validate_rook_move(starting_square, destination_square)
@@ -107,16 +134,45 @@ class Chess
     black_castling[0] = 0 if starting_square = [0, 7] && @turn == "Black"
     black_castling[1] = 0 if starting_square = [7, 7] && @turn == "Black"
     return false if destination_square[0]  - starting_square[0] != 0 && destination_square[1] - starting_square[1] != 0
+    return false if line_of_sight(starting_square, destination_square) == false
   end
 
   def validate_queen_move(starting_square, destination_square)
     return false if starting_square[0] != destination_square[0] && starting_square[1] != destination_square[1] && (destination_square[0] - starting_square[0]).abs != (destination_square[1] - starting_square[1]).abs
+    return false if line_of_sight(starting_square, destination_square) == false
   end
 
   def validate_king_move(starting_square, destination_square)
+    validate_king_move_castling(starting_square, destination_square) if (destination_square[0] - starting_square[0]).abs == 2
     return false if (destination_square[0] - starting_square[0]).abs >= 2 || (destination_square[1] - starting_square[1]).abs >= 2
     white_castling = [0, 0] if @turn == "White"
     black_castling = [0, 0] if @turn == "Black"
+  end
+
+  def validate_king_move_castling(starting_square, destination_square)
+    if starting_square == [4, 0] && destination_square == [6, 0] && white_castling[0] == 1 && @gameboard[5][0] == '  ' && @gameboard[6][0] == '  '
+      @gameboard[5][0] = 'wR'
+      @gameboard[7][0] = '  '
+      return true
+    elsif starting_square == [4, 0] && destination_square == [2, 0] && white_castling[1] == 1 && gameboard[3][0] == '  ' && gameboard[2][0] == '  ' && gameboard[1][0] == '  '
+      @gameboard[3][0] = 'wR'
+      @gameboard[0][0] = '  '
+      return true
+    elsif starting_square == [4, 7] && destination_square == [6, 7] && black_castling[0] == 1 && gameboard[5][7] == '  ' && gameboard[6][7] == '  '
+      @gameboard[5][7] = 'bR'
+      @gameboard[7][7] = '  '
+      return true
+    elsif starting_square == [4, 7] && destination_square == [2, 7] && black_castling[1] == 1 && gameboard[3][7] == '  ' && gameboard[2][7] == '  ' && gameboard[1][7] == '  '
+      @gameboard[3][7] = 'bR'
+      @gameboard[0][7] = '  '
+      return true
+    else
+      false
+    end
+  end
+
+  def is_in_check
+
   end
 
   def update_gamestate(starting_square, destination_square)
@@ -139,4 +195,5 @@ class Chess
 end
 
 test_game = Chess.new
-test_game.game_loop
+test_game.line_of_sight([7, 7], [7, 0])
+#test_game.game_loop
